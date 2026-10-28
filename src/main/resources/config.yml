@@ -1,0 +1,13 @@
+# CustomLockItem config.
+# You can edit these in-game with /customlockitems config (sliders),
+# or here and then run /customlockitems reload.
+lucky_coin:
+  duration_seconds: 5      # 1 - 60
+  cooldown_seconds: 600    # 0 - 3600 (600 = 10 minutes)
+  resistance_level: 5      # 1 - 5 (5 = Resistance V)
+timestop_clock:
+  duration_seconds: 15     # 1 - 120
+  cooldown_seconds: 90     # 0 - 3600 (90 = 1 minute 30 seconds)
+  tick_rate: 10            # 1 - 20 (20 = normal speed, 10 = half speed)
+  radius: 7                # blocks, 1 - 32 (file only)
+  resistance_level: 3      # 1 - 5 (file only) given to the user while active

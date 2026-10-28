@@ -1,0 +1,18 @@
+name: CustomLockItem
+version: '${project.version}'
+main: com.example.customlockitem.CustomLockItem
+api-version: '1.21'
+description: Custom lock items (Lucky Coin, Timestop Clock) with an in-game config menu.
+commands:
+  customlockitems:
+    description: Give custom lock items and configure them
+    usage: /<command> <give|config|reload|resetcooldown|help>
+    aliases: [lockitems, cli]
+    permission: customlockitems.admin
+permissions:
+  customlockitems.admin:
+    description: Give items, open the config menu, reload, reset cooldowns
+    default: op
+  customlockitems.use:
+    description: Use the custom lock items (anyone holding one)
+    default: true

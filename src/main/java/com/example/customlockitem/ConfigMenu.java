@@ -21,8 +21,9 @@ import java.util.List;
  * Click the bar to jump to a value, or use - / + to fine tune (shift-click for bigger steps).
  */
 public final class ConfigMenu implements InventoryHolder {
-    public enum Page { MAIN, COIN, CLOCK }
+    public enum Page { MAIN, COIN, CLOCK, EYE }
     private static final int COIN_ICON_SLOT = 11;
+    private static final int EYE_ICON_SLOT = 13;
     private static final int CLOCK_ICON_SLOT = 15;
     private static final int BACK_SLOT = 36;
     private static final int RESET_SLOT = 44;
@@ -36,6 +37,7 @@ public final class ConfigMenu implements InventoryHolder {
             case MAIN -> Component.text("CustomLockItem Config");
             case COIN -> Component.text("Lucky Coin Settings");
             case CLOCK -> Component.text("Timestop Clock Settings");
+            case EYE -> Component.text("Eye of Exponential End Settings");
         };
         this.inventory = Bukkit.createInventory(this, page == Page.MAIN ? 27 : 45, title);
         render();
@@ -49,9 +51,13 @@ public final class ConfigMenu implements InventoryHolder {
     }
     // ------------------------------------------------------------- drawing
     private Slider[] sliders() {
-        return switch (page) {
+        return slidersFor(page);
+    }
+    private static Slider[] slidersFor(Page which) {
+        return switch (which) {
             case COIN -> new Slider[]{Slider.COIN_DURATION, Slider.COIN_COOLDOWN, Slider.COIN_LEVEL};
             case CLOCK -> new Slider[]{Slider.CLOCK_DURATION, Slider.CLOCK_COOLDOWN, Slider.CLOCK_TICK_RATE};
+            case EYE -> new Slider[]{Slider.EYE_RADIUS, Slider.EYE_ARMOR_DAMAGE};
             case MAIN -> new Slider[0];
         };
     }
@@ -63,10 +69,15 @@ public final class ConfigMenu implements InventoryHolder {
         }
         if (page == Page.MAIN) {
             inventory.setItem(COIN_ICON_SLOT, plugin.items().icon(ItemType.LUCKY_COIN, summary(Page.COIN)));
+            inventory.setItem(EYE_ICON_SLOT, plugin.items().icon(ItemType.EXPONENTIAL_EYE, summary(Page.EYE)));
             inventory.setItem(CLOCK_ICON_SLOT, plugin.items().icon(ItemType.TIMESTOP_CLOCK, summary(Page.CLOCK)));
             return;
         }
-        ItemType type = page == Page.COIN ? ItemType.LUCKY_COIN : ItemType.TIMESTOP_CLOCK;
+        ItemType type = switch (page) {
+            case COIN -> ItemType.LUCKY_COIN;
+            case EYE -> ItemType.EXPONENTIAL_EYE;
+            default -> ItemType.TIMESTOP_CLOCK;
+        };
         inventory.setItem(4, plugin.items().icon(type, List.of(
                 Text.plain("Click a bar to jump to a value.", NamedTextColor.GRAY),
                 Text.plain("Use - / + to fine tune.", NamedTextColor.GRAY),
@@ -116,10 +127,7 @@ public final class ConfigMenu implements InventoryHolder {
     private List<Component> summary(Page which) {
         FileConfiguration config = plugin.getConfig();
         List<Component> lines = new ArrayList<>();
-        Slider[] list = which == Page.COIN
-                ? new Slider[]{Slider.COIN_DURATION, Slider.COIN_COOLDOWN, Slider.COIN_LEVEL}
-                : new Slider[]{Slider.CLOCK_DURATION, Slider.CLOCK_COOLDOWN, Slider.CLOCK_TICK_RATE};
-        for (Slider slider : list) {
+        for (Slider slider : slidersFor(which)) {
             lines.add(Text.plain(slider.label() + ": " + slider.format(slider.get(config)), NamedTextColor.GRAY));
         }
         lines.add(Component.empty());
@@ -148,6 +156,7 @@ public final class ConfigMenu implements InventoryHolder {
         FileConfiguration config = plugin.getConfig();
         if (page == Page.MAIN) {
             if (slot == COIN_ICON_SLOT) openLater(player, Page.COIN);
+            else if (slot == EYE_ICON_SLOT) openLater(player, Page.EYE);
             else if (slot == CLOCK_ICON_SLOT) openLater(player, Page.CLOCK);
             return;
         }

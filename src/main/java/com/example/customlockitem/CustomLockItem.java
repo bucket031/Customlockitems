@@ -13,30 +13,41 @@ public final class CustomLockItem extends JavaPlugin {
     private Items items;
     private CooldownManager cooldowns;
     private TimestopManager timestop;
+    private ExponentialEye eye;
+    private WispManager wisps;
     @Override
     public void onEnable() {
         saveDefaultConfig();
         items = new Items(this);
         cooldowns = new CooldownManager(this);
         timestop = new TimestopManager(this);
+        eye = new ExponentialEye(this);
+        wisps = new WispManager(this);
         getServer().getPluginManager().registerEvents(new ItemListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(timestop, this);
+        getServer().getPluginManager().registerEvents(eye, this);
+        getServer().getPluginManager().registerEvents(wisps, this);
         LockItemCommand command = new LockItemCommand(this);
         PluginCommand pluginCommand = Objects.requireNonNull(getCommand("customlockitems"));
         pluginCommand.setExecutor(command);
         pluginCommand.setTabCompleter(command);
         timestop.start();
+        wisps.start();
     }
     @Override
     public void onDisable() {
         if (timestop != null) timestop.shutdown();
+        if (wisps != null) wisps.shutdown();
     }
     public Items items() {
         return items;
     }
     public CooldownManager cooldowns() {
         return cooldowns;
+    }
+    public WispManager wisps() {
+        return wisps;
     }
     /** Radius of the Timestop Clock field in blocks (file-only setting). */
     public double clockRadius() {
@@ -58,6 +69,7 @@ public final class CustomLockItem extends JavaPlugin {
         switch (type) {
             case LUCKY_COIN -> useCoin(player);
             case TIMESTOP_CLOCK -> useClock(player);
+            case EXPONENTIAL_EYE -> eye.throwEye(player);
         }
     }
     private void useCoin(Player player) {

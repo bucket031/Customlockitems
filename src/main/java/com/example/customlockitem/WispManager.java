@@ -2,6 +2,7 @@ package com.example.customlockitem;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -31,11 +32,13 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * A spirit can't be seen by other players. Instead, a small orb of black and gray particles
  * floats where they stand. When a spirit talks, nobody sees a normal chat line: the words appear
- * in yellow above the hotbar. Normal chat is shown to everyone, /msg only to the person named.
+ * as a purple gradient above the hotbar. Normal chat is shown to everyone, /msg only to the person named.
  */
 public final class WispManager implements Listener {
     private static final List<String> MSG_COMMANDS = List.of("msg", "tell", "w", "whisper");
     private static final double VIEW_DISTANCE_SQUARED = 48.0 * 48.0;
+    private static final TextColor PURPLE = TextColor.color(0x9B30FF);
+    private static final TextColor LIGHT_PURPLE = TextColor.color(0xE0B0FF);
     private static final Particle.DustOptions BLACK = new Particle.DustOptions(Color.fromRGB(8, 8, 8), 1.3f);
     private static final Particle.DustOptions GRAY = new Particle.DustOptions(Color.fromRGB(125, 125, 125), 1.0f);
     private final CustomLockItem plugin;
@@ -186,15 +189,26 @@ public final class WispManager implements Listener {
         speaker.sendMessage(Component.text("You whisper to " + target.getName() + ": " + text,
                 NamedTextColor.GRAY, TextDecoration.ITALIC));
     }
+    /** Colors the text letter by letter, from purple to light purple. */
+    private static Component gradient(String text) {
+        int[] letters = text.codePoints().toArray();
+        Component out = Component.empty();
+        for (int i = 0; i < letters.length; i++) {
+            float t = letters.length <= 1 ? 0f : i / (float) (letters.length - 1);
+            out = out.append(Component.text(new String(Character.toChars(letters[i])),
+                    TextColor.lerp(t, PURPLE, LIGHT_PURPLE)));
+        }
+        return out;
+    }
     /**
-     * Shows text in yellow above the hotbar. Action bar text fades after about 3 seconds,
+     * Shows text above the hotbar as a purple to light purple gradient. Action bar text fades after about 3 seconds,
      * so longer messages are sent again until they have been up long enough to read.
      */
     private void show(Player viewer, String text) {
         UUID id = viewer.getUniqueId();
         BukkitTask old = speech.remove(id);
         if (old != null) old.cancel();
-        Component line = Component.text(text, NamedTextColor.YELLOW);
+        Component line = gradient(text);
         viewer.sendActionBar(line);
         int total = Math.max(60, Math.min(240, 60 + text.length() * 3));
         if (total <= 50) return;

@@ -11,3 +11,8 @@ timestop_clock:
   tick_rate: 10            # 1 - 20 (20 = normal speed, 10 = half speed)
   radius: 7                # blocks, 1 - 32 (file only)
   resistance_level: 3      # 1 - 5 (file only) given to the user while active
+exponential_eye:
+  radius: 20               # blocks, 5 - 64
+  armor_damage: 150        # durability removed from every worn armor piece, 0 - 1000
+abyss:
+  orb_radius: 0.5          # size of the black and gray orb in blocks, 0.2 - 2.0 (file only)

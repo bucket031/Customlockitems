@@ -7,8 +7,10 @@ public enum Slider {
     COIN_LEVEL("lucky_coin.resistance_level", "Resistance level", 1, 5, 1, 1, 5, Kind.LEVEL),
     CLOCK_DURATION("timestop_clock.duration_seconds", "Duration", 1, 120, 1, 10, 15, Kind.SECONDS),
     CLOCK_COOLDOWN("timestop_clock.cooldown_seconds", "Cooldown", 0, 3600, 5, 60, 90, Kind.SECONDS),
-    CLOCK_TICK_RATE("timestop_clock.tick_rate", "Tick rate", 1, 20, 1, 5, 10, Kind.TICKS);
-    public enum Kind { SECONDS, LEVEL, TICKS }
+    CLOCK_TICK_RATE("timestop_clock.tick_rate", "Tick rate", 1, 20, 1, 5, 10, Kind.TICKS),
+    EYE_RADIUS("exponential_eye.radius", "Blast radius", 5, 64, 1, 5, 20, Kind.BLOCKS),
+    EYE_ARMOR_DAMAGE("exponential_eye.armor_damage", "Armor damage", 0, 1000, 10, 50, 150, Kind.DURABILITY);
+    public enum Kind { SECONDS, LEVEL, TICKS, BLOCKS, DURABILITY }
     /** How many positions the clickable bar has at most (menu rows are 9 wide, minus 2 buttons). */
     public static final int MAX_POSITIONS = 7;
     private final String path;
@@ -68,6 +70,8 @@ public enum Slider {
             case TICKS -> value >= 20
                     ? "20 ticks/s (normal speed)"
                     : value + " ticks/s (" + (value * 5) + "% speed)";
+            case BLOCKS -> value + (value == 1 ? " block" : " blocks");
+            case DURABILITY -> value == 0 ? "None" : value + " durability";
         };
     }
     /** How much one click changes the value, for button tooltips. */
@@ -76,6 +80,8 @@ public enum Slider {
             case SECONDS -> Text.seconds(delta);
             case LEVEL -> delta + (delta == 1 ? " level" : " levels");
             case TICKS -> delta + (delta == 1 ? " tick" : " ticks");
+            case BLOCKS -> delta + (delta == 1 ? " block" : " blocks");
+            case DURABILITY -> delta + " durability";
         };
     }
 }

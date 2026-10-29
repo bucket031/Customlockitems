@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-/** /customlockitems give | config | reload | resetcooldown | help */
+/** /customlockitems give | config | reload | resetcooldown | wisp | help */
 public final class LockItemCommand implements TabExecutor {
     private final CustomLockItem plugin;
     public LockItemCommand(CustomLockItem plugin) {
@@ -30,6 +30,7 @@ public final class LockItemCommand implements TabExecutor {
             case "config" -> config(sender);
             case "reload" -> reload(sender);
             case "resetcooldown" -> resetCooldown(sender, args);
+            case "wisp" -> wisp(sender, args);
             default -> help(sender, label);
         }
         return true;
@@ -104,6 +105,57 @@ public final class LockItemCommand implements TabExecutor {
         plugin.cooldowns().clear(target, type);
         msg(sender, "Reset the " + type.displayName() + " cooldown for " + target.getName() + ".", NamedTextColor.GREEN);
     }
+    // ----------------------------------------------------------------- wisp
+    private void wisp(CommandSender sender, String[] args) {
+        String sub = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "";
+        switch (sub) {
+            case "set" -> {
+                if (args.length < 4) {
+                    msg(sender, "Usage: /customlockitems wisp set <player> <" + wispNames() + ">", NamedTextColor.YELLOW);
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    msg(sender, "Player '" + args[2] + "' is not online.", NamedTextColor.RED);
+                    return;
+                }
+                WispType type = WispType.fromInput(args[3]);
+                if (type == null) {
+                    msg(sender, "Unknown wisp '" + args[3] + "'. Wisps: " + wispNames(), NamedTextColor.RED);
+                    return;
+                }
+                plugin.wisps().set(target, type);
+                msg(sender, target.getName() + " is now the " + type.displayName() + ".", NamedTextColor.GREEN);
+            }
+            case "clear" -> {
+                if (args.length < 3) {
+                    msg(sender, "Usage: /customlockitems wisp clear <player>", NamedTextColor.YELLOW);
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(args[2]);
+                if (target == null) {
+                    msg(sender, "Player '" + args[2] + "' is not online.", NamedTextColor.RED);
+                    return;
+                }
+                boolean was = plugin.wisps().clear(target);
+                msg(sender, was ? target.getName() + " is a normal player again."
+                        : target.getName() + " was not a wisp.", NamedTextColor.GREEN);
+            }
+            case "list" -> {
+                List<String> names = plugin.wisps().names();
+                msg(sender, names.isEmpty() ? "No wisps are online." : "Wisps online: " + String.join(", ", names),
+                        NamedTextColor.GOLD);
+            }
+            default -> msg(sender, "Usage: /customlockitems wisp <set|clear|list> ...", NamedTextColor.YELLOW);
+        }
+    }
+    private static String wispNames() {
+        List<String> names = new ArrayList<>();
+        for (WispType type : WispType.values()) {
+            names.add(type.id());
+        }
+        return String.join(", ", names);
+    }
     // ----------------------------------------------------------------- help
     private void help(CommandSender sender, String label) {
         msg(sender, "CustomLockItem commands:", NamedTextColor.GOLD);
@@ -111,6 +163,9 @@ public final class LockItemCommand implements TabExecutor {
         msg(sender, "/" + label + " config  - open the settings menu", NamedTextColor.WHITE);
         msg(sender, "/" + label + " reload  - reload config.yml", NamedTextColor.WHITE);
         msg(sender, "/" + label + " resetcooldown <player> [item|all]  - clear cooldowns", NamedTextColor.WHITE);
+        msg(sender, "/" + label + " wisp set <player> <type>  - turn a player into a wisp (" + wispNames() + ")", NamedTextColor.WHITE);
+        msg(sender, "/" + label + " wisp clear <player>  - turn a wisp back into a normal player", NamedTextColor.WHITE);
+        msg(sender, "/" + label + " wisp list  - show who is a wisp", NamedTextColor.WHITE);
         msg(sender, "Items: " + itemNames(), NamedTextColor.GRAY);
     }
     private static String itemNames() {
@@ -129,12 +184,20 @@ public final class LockItemCommand implements TabExecutor {
                                       @NotNull String label, @NotNull String[] args) {
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
-            out.addAll(List.of("give", "config", "reload", "resetcooldown", "help"));
+            out.addAll(List.of("give", "config", "reload", "resetcooldown", "wisp", "help"));
         } else if (args[0].equalsIgnoreCase("give")) {
             if (args.length == 2) {
                 for (ItemType type : ItemType.values()) out.add(type.id());
             } else if (args.length == 3) {
                 Bukkit.getOnlinePlayers().forEach(p -> out.add(p.getName()));
+            }
+        } else if (args[0].equalsIgnoreCase("wisp")) {
+            if (args.length == 2) {
+                out.addAll(List.of("set", "clear", "list"));
+            } else if (args.length == 3 && !args[1].equalsIgnoreCase("list")) {
+                Bukkit.getOnlinePlayers().forEach(p -> out.add(p.getName()));
+            } else if (args.length == 4 && args[1].equalsIgnoreCase("set")) {
+                for (WispType type : WispType.values()) out.add(type.id());
             }
         } else if (args[0].equalsIgnoreCase("resetcooldown")) {
             if (args.length == 2) {
